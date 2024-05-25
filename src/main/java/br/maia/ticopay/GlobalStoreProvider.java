@@ -1,30 +1,30 @@
 package br.maia.ticopay;
 
 import br.maia.ticopay.carteira.entity.Carteira;
-import br.maia.ticopay.transacoes.boundary.TransactionsResource;
+import br.maia.ticopay.transfers.boundary.TransfersResource;
+import br.maia.ticopay.transfers.entity.Transfer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @ApplicationScoped
 public class GlobalStoreProvider {
 
-    Map<UUID, TransactionsResource.Transaction> transactions = new HashMap<>();
-    Map<UUID, Carteira> carteiras = new HashMap<>();
+    Map<Long, Transfer> transactions = new HashMap<>();
+    Map<Long, Carteira> carteiras = new HashMap<>();
 
     @Produces()
     @Named("transactions")
-    public Map<UUID, TransactionsResource.Transaction> getTransactions() {
+    public Map<Long, Transfer> getTransfers() {
         return transactions;
     }
 
     @Produces()
     @Named("carteiras")
-    public Map<UUID, Carteira> getCarteiras() {
+    public Map<Long, Carteira> getCarteiras() {
         return carteiras;
     }
 }
