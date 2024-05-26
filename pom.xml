@@ -44,9 +44,20 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-hibernate-validator</artifactId>
     </dependency>
+<!--      <dependency>-->
+<!--          <groupId>io.quarkus</groupId>-->
+<!--          <artifactId>quarkus-narayana-jta</artifactId>-->
+<!--      </dependency>-->
+      <!-- Hibernate ORM specific dependencies -->
       <dependency>
           <groupId>io.quarkus</groupId>
-          <artifactId>quarkus-narayana-jta</artifactId>
+          <artifactId>quarkus-hibernate-orm-panache</artifactId>
+      </dependency>
+
+      <!-- JDBC driver dependencies -->
+      <dependency>
+          <groupId>io.quarkus</groupId>
+          <artifactId>quarkus-jdbc-postgresql</artifactId>
       </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

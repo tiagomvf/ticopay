@@ -6,19 +6,16 @@ import br.maia.ticopay.transfers.boundary.TransfersResource;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Dependent
 @Transactional(Transactional.TxType.MANDATORY)
 public class TransfersStore {
 
     @Inject
-    @Named("transactions")
-    Map<Long, Transfer> transfers;
+    TransferRepository repository;
 
     @Inject
     CarteiraStore walletStore;
@@ -33,7 +30,7 @@ public class TransfersStore {
     Event<WithdrawalEvent> onWithdrawal;
 
     public Transfer get(Long transactionId) {
-        return transfers.get(transactionId);
+        return repository.findById(transactionId);
     }
 
     public record TransferEvent(Long payer, Long payee, BigDecimal value) {}
@@ -43,9 +40,8 @@ public class TransfersStore {
     public Transfer postTransfer(long payer, long payee, BigDecimal value) {
         walletStore.depositar(payee, value);
         walletStore.sacar(payer, value);
-        Long transactionId = (long) (Math.random() * 100_000_000);
-        Transfer transfer = new Transfer(transactionId, payer, payee, value);
-        transfers.put(transactionId, transfer);
+        Transfer transfer = new Transfer(payer, payee, value);
+        repository.persist(transfer);
         onTransfer.fire(new TransferEvent(payer, payee, value));
         return transfer;
     }

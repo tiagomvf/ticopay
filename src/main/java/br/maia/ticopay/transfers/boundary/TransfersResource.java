@@ -7,6 +7,8 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -28,10 +30,9 @@ public class TransfersResource {
     @POST
     @Path("")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response postTransfer(Payload payload, @Context UriInfo uriInfo) {
-        System.out.println("teste");
+    public Response postTransfer(@NotNull @Valid Payload payload, @Context UriInfo uriInfo) {
         Transfer transfer = postTransfer(payload);
-        URI location = getLocation(uriInfo, transfer.id());
+        URI location = getLocation(uriInfo, transfer.getId());
         return Response.created(location).build();
     }
 
@@ -39,7 +40,9 @@ public class TransfersResource {
         try {
             return store.postTransfer(payload.payer(), payload.payee(), payload.value());
         } catch (InsufficientFundsException e) {
-            throw new BadRequestException(e);
+            throw new BadRequestException(
+                Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build()
+            );
         }
     }
 
@@ -54,6 +57,9 @@ public class TransfersResource {
         return store.get(transactionId);
     }
 
-    public record Payload( BigDecimal value, long payer, long payee) { }
+    public record Payload(
+        @NotNull @DecimalMin("0.01") BigDecimal value,
+        @NotNull long payer,
+        @NotNull long payee) { }
 
 }

@@ -1,42 +1,44 @@
 package br.maia.ticopay.wallet.control;
 
-import br.maia.ticopay.carteira.entity.Carteira;
+import br.maia.ticopay.wallet.entity.Wallet;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
 
-@Dependent
+@ApplicationScoped
 public class CarteiraStore {
 
     @Inject
-    @Named("carteiras")
-    Map<Long, Carteira> carteiras;
+    WalletRepository repository;
 
-    public BigDecimal getSaldo(Long userId) {
-        if(!carteiras.containsKey(userId)) {
-            carteiras.put(userId, new Carteira(BigDecimal.ZERO));
-        }
-        return carteiras.get(Long.valueOf(userId)).saldo();
+    Wallet getWalletOf(Long ownerId) {
+        Wallet wallet = repository.findById(ownerId);
+        if(wallet != null) return wallet;
+        wallet = new Wallet();
+        wallet.setOwnerId(ownerId);
+        wallet.setBalance(BigDecimal.ZERO);
+        repository.persist(wallet);
+        return wallet;
     }
 
-    public void updateUserWallet(Long payer, BigDecimal novoSaldo) {
-        carteiras.put(payer, new Carteira(novoSaldo));
-    }
-
+    @Transactional
     public void depositar(Long payer, BigDecimal value) {
-        var novoSaldo = getSaldo(payer).add(value);
-        updateUserWallet(payer, novoSaldo);
+        Wallet wallet = getWalletOf(payer);
+        wallet.setBalance(wallet.getBalance().add(value));
     }
 
+    @Transactional
     public void sacar(Long payee, BigDecimal value) {
-        BigDecimal oldBalace = getSaldo(payee);
-        if(oldBalace.compareTo(value) < 1) {
+        Wallet wallet = getWalletOf(payee);
+        if(value.compareTo(wallet.getBalance()) > 0){
             throw new InsufficientFundsException();
         }
-        var newBalace = oldBalace.subtract(value);
-        updateUserWallet(payee, newBalace);
+        wallet.setBalance(wallet.getBalance().subtract(value));
     }
 }
