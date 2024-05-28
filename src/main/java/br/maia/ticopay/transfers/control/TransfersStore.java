@@ -6,9 +6,18 @@ import br.maia.ticopay.transfers.boundary.TransfersResource;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.stream.JsonParser;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.ServerErrorException;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @Dependent
 @Transactional(Transactional.TxType.MANDATORY)
@@ -38,4 +47,24 @@ public class TransfersStore {
         return transfer;
     }
 
+    void validar(Transfer transfer) {
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder().build();
+            try {
+                HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                JsonObject jsonObject = Json.createReader(response.body()).readObject();
+                System.out.println(response.statusCode());
+                System.out.println(jsonObject.toString());
+
+            } catch (IOException e) {
+                throw new TransferAuthenticationException(
+                    "An IOExcetion occurred when validating the transfer.", e
+                );
+            } catch (InterruptedException e) {
+                throw new TransferAuthenticationException(
+                    "An InterruptedException occurred when validating the transfer.", e
+                );
+            }
+        }
+    }
 }
