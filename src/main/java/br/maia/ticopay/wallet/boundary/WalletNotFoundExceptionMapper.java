@@ -1,4 +1,4 @@
-package br.maia.ticopay.wallet;
+package br.maia.ticopay.wallet.boundary;
 
 import br.maia.ticopay.wallet.control.WalletNotFoundException;
 import jakarta.ws.rs.core.Response;

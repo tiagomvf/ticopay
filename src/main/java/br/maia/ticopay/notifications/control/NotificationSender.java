@@ -19,7 +19,7 @@ import java.net.http.HttpResponse;
 import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
-public class NotificationProcessor {
+public class NotificationSender {
 
     @Inject
     Logger logger;
