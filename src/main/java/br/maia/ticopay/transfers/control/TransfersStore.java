@@ -1,19 +1,19 @@
 package br.maia.ticopay.transfers.control;
 
+import br.maia.ticopay.notifications.entity.Notification;
 import br.maia.ticopay.transfers.entity.Transfer;
 import br.maia.ticopay.wallet.control.CarteiraStore;
-import br.maia.ticopay.transfers.boundary.TransfersResource;
-import io.quarkus.security.UnauthorizedException;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
-import jakarta.json.stream.JsonParser;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ServerErrorException;
 import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,6 @@ import java.net.http.HttpResponse;
 import java.util.function.Predicate;
 
 @Dependent
-@Transactional(Transactional.TxType.MANDATORY)
 public class TransfersStore {
 
     @Inject
@@ -34,22 +33,22 @@ public class TransfersStore {
     @Inject
     CarteiraStore walletStore;
 
-    @Inject
-    Event<TransferEvent> onTransfer;
-
     public Transfer get(Long transactionId) {
         return repository.findById(transactionId);
     }
 
-    public record TransferEvent(Long payer, Long payee, BigDecimal value) {}
+    @Inject
+    @Channel("transfer-created")
+    Emitter<Transfer> emitter;
 
+    @Transactional(Transactional.TxType.MANDATORY)
     public Transfer postTransfer(long payer, long payee, BigDecimal value) {
-        walletStore.depositar(payee, value);
-        walletStore.sacar(payer, value);
         Transfer transfer = new Transfer(payer, payee, value);
         validar(transfer);
         repository.persist(transfer);
-        onTransfer.fire(new TransferEvent(payer, payee, value));
+        walletStore.depositar(payee, value);
+        walletStore.sacar(payer, value);
+        emitter.send(transfer);
         return transfer;
     }
 

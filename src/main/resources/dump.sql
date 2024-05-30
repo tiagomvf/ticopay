@@ -85,3 +85,12 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 insert INTO public.wallet (balance, ownerid) values (1000,4);
 insert INTO public.wallet (balance, ownerid) values (0,15);
 
+create table public.Notification (
+  id uuid not null,
+  payee bigint not null,
+  payer bigint not null,
+  status smallint not null check (status between 0 and 2),
+  value numeric(38,2) not null,
+  primary key (id)
+);
+
