@@ -12,6 +12,7 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -31,25 +32,25 @@ public class NotificationSender {
     @Transactional
     public CompletionStage<Void> process(Message<Transfer> transferMessage) {
         Transfer transfer = transferMessage.getPayload();
-        Notification notification = new Notification();
-        notification.setPayee(transfer.getPayee());
-        notification.setPayer(transfer.getPayer());
-        notification.setValue(transfer.getValue());
-        notification.setStatus(Notification.Status.NOT_SENT);
         try {
-            this.send(notification);
+            this.sendNotification(transfer);
             logger.info("Notification sent");
         } catch (Exception ex) {
+            Notification notification = new Notification();
+            notification.setPayee(transfer.getPayee());
+            notification.setPayer(transfer.getPayer());
+            notification.setValue(transfer.getValue());
             notification.setStatus(Notification.Status.ERROR);
-            logger.info("Error sending notification: " + ex.getClass() + ex.getMessage());
+            //saving not send notifications...
+            entityManager.persist(notification);
+            logger.warn("Error sending notification: " + ex.getClass() + ex.getMessage());
         }
-        entityManager.persist(notification);
         return transferMessage.ack();
     }
 
-    @Retry(maxRetries = 5, delay = 1000)
-    void send(Notification notification) throws IOException, InterruptedException {
-        logger.info("sending notification");
+    @Retry(maxRetries = 2, delay = 100)
+    void sendNotification(Transfer transfer) throws IOException, InterruptedException {
+        logger.info("Trying to send notification");
         try (HttpClient httpClient = HttpClient.newHttpClient()) {
             HttpRequest request = HttpRequest
                 .newBuilder()
@@ -58,7 +59,8 @@ public class NotificationSender {
                 .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 204) {
-                throw new RuntimeException("Error sending notification: " + response.body());
+                logger.warn("Could not send notification: " + response.body());
+                throw new RuntimeException("Could not send notification: " + response.body());
             }
         }
     }

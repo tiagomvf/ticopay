@@ -13,16 +13,14 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @QuarkusTest
-class CarteiraStoreTest {
+class WalletStoreTest {
 
     @Inject
     EntityManager em;
 
     @Inject
-    CarteiraStore carteiraStore;
+    WalletStore walletStore;
 
     @BeforeEach
     @Transactional
@@ -42,23 +40,23 @@ class CarteiraStoreTest {
 
     @Test
     void depositar() {
-        carteiraStore.depositar(1L, BigDecimal.ONE);
-        BigDecimal balance = carteiraStore.findById(1L).getBalance();
+        walletStore.depositar(1L, BigDecimal.ONE);
+        BigDecimal balance = walletStore.findById(1L).getBalance();
         Assertions.assertEquals(0, BigDecimal.TWO.compareTo(balance));
     }
 
     @Test
     void sacar() {
-        carteiraStore.sacar(1L, BigDecimal.ONE);
-        BigDecimal balance = carteiraStore.findById(1L).getBalance();
+        walletStore.sacar(1L, BigDecimal.ONE);
+        BigDecimal balance = walletStore.findById(1L).getBalance();
         Assertions.assertEquals(0, BigDecimal.ZERO.compareTo(balance));
     }
 
     @Test
     void shouldThrowExceptionWhenInsufficientBalance(){
-        Assertions.assertThrowsExactly(InsufficientFundsException.class, () -> carteiraStore.sacar(1L,
+        Assertions.assertThrowsExactly(InsufficientFundsException.class, () -> walletStore.sacar(1L,
             BigDecimal.TWO), "Saldo Insuficiente");
-        BigDecimal balance = carteiraStore.findById(1L).getBalance();
+        BigDecimal balance = walletStore.findById(1L).getBalance();
         Assertions.assertEquals(1, BigDecimal.TWO.compareTo(balance));
     }
 

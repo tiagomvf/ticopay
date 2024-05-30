@@ -3,17 +3,14 @@ package br.maia.ticopay.wallet.control;
 import br.maia.ticopay.wallet.entity.Wallet;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.BadRequestException;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
 @Dependent
-public class CarteiraStore {
-
-    @Inject
-    WalletRepository repository;
+public class WalletStore {
 
     @Transactional
     public void depositar(Long payer, BigDecimal value) {
@@ -22,12 +19,14 @@ public class CarteiraStore {
     }
 
     private Wallet getWallet(Long payer) {
-        Wallet wallet = Optional.ofNullable(repository.findById(payer)).orElseThrow(
+       return
+            Optional.ofNullable(
+                this.findById(payer)
+            ).orElseThrow(
             () -> new WalletNotFoundException(
                 "Wallet with id %d not found".formatted(payer)
             )
         );
-        return wallet;
     }
 
     @Transactional
@@ -39,8 +38,11 @@ public class CarteiraStore {
         wallet.setBalance(wallet.getBalance().subtract(value));
     }
 
+    @Inject
+    EntityManager entityManager;
     @Transactional
-    public Wallet findById(long l) {
-        return repository.findById(l);
+    Wallet findById(long l) {
+        return entityManager.find(Wallet.class, l);
     }
+
 }

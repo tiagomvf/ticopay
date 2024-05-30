@@ -1,13 +1,12 @@
 package br.maia.ticopay.transfers.control;
 
-import br.maia.ticopay.notifications.entity.Notification;
 import br.maia.ticopay.transfers.entity.Transfer;
-import br.maia.ticopay.wallet.control.CarteiraStore;
+import br.maia.ticopay.wallet.control.WalletStore;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ServerErrorException;
 import jakarta.ws.rs.WebApplicationException;
@@ -31,7 +30,7 @@ public class TransfersStore {
     TransferRepository repository;
 
     @Inject
-    CarteiraStore walletStore;
+    WalletStore walletStore;
 
     public Transfer get(Long transactionId) {
         return repository.findById(transactionId);

@@ -1,9 +1,6 @@
 package br.maia.ticopay.transfers.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 
@@ -12,6 +9,7 @@ public class Transfer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
+
     Long payer;
     Long payee;
     BigDecimal value;

@@ -30,14 +30,30 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: notification; Type: TABLE; Schema: public; Owner: quarkus
+--
+
+CREATE TABLE public.notification (
+    status smallint NOT NULL,
+    value numeric(38,2) NOT NULL,
+    payee bigint NOT NULL,
+    payer bigint NOT NULL,
+    id uuid NOT NULL,
+    CONSTRAINT notification_status_check CHECK (((status >= 0) AND (status <= 2)))
+);
+
+
+ALTER TABLE public.notification OWNER TO quarkus;
+
+--
 -- Name: transfer; Type: TABLE; Schema: public; Owner: quarkus
 --
 
 CREATE TABLE public.transfer (
     value numeric(38,2),
     id bigint NOT NULL,
-    payee bigint,
-    payer bigint
+    payee bigint NOT NULL,
+    payer bigint NOT NULL
 );
 
 
@@ -70,6 +86,46 @@ CREATE TABLE public.wallet (
 ALTER TABLE public.wallet OWNER TO quarkus;
 
 --
+-- Name: notification notification_pkey; Type: CONSTRAINT; Schema: public; Owner: quarkus
+--
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: transfer transfer_pkey; Type: CONSTRAINT; Schema: public; Owner: quarkus
+--
+
+ALTER TABLE ONLY public.transfer
+    ADD CONSTRAINT transfer_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: wallet wallet_pkey; Type: CONSTRAINT; Schema: public; Owner: quarkus
+--
+
+ALTER TABLE ONLY public.wallet
+    ADD CONSTRAINT wallet_pkey PRIMARY KEY (ownerid);
+
+
+--
+-- Name: transfer fk5bs33nh5s0x2l89nnhp7ex1c8; Type: FK CONSTRAINT; Schema: public; Owner: quarkus
+--
+
+ALTER TABLE ONLY public.transfer
+    ADD CONSTRAINT fk5bs33nh5s0x2l89nnhp7ex1c8 FOREIGN KEY (payer) REFERENCES public.wallet(ownerid);
+
+
+--
+-- Name: transfer fkmqcr388oruwt0mgr4euch226q; Type: FK CONSTRAINT; Schema: public; Owner: quarkus
+--
+
+ALTER TABLE ONLY public.transfer
+    ADD CONSTRAINT fkmqcr388oruwt0mgr4euch226q FOREIGN KEY (payee) REFERENCES public.wallet(ownerid);
+
+
+--
 -- Name: SCHEMA public; Type: ACL; Schema: -; Owner: quarkus
 --
 
@@ -81,16 +137,5 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-
 insert INTO public.wallet (balance, ownerid) values (1000,4);
 insert INTO public.wallet (balance, ownerid) values (0,15);
-
-create table public.Notification (
-  id uuid not null,
-  payee bigint not null,
-  payer bigint not null,
-  status smallint not null check (status between 0 and 2),
-  value numeric(38,2) not null,
-  primary key (id)
-);
-
