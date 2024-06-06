@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.12 (Debian 14.12-1.pgdg120+1)
--- Dumped by pg_dump version 15.4
+-- Dumped from database version 15.7 (Debian 15.7-1.pgdg120+1)
+-- Dumped by pg_dump version 15.6 (Debian 15.6-0+deb12u1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,18 +16,25 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: quarkus
---
-
--- *not* creating schema, since initdb creates it
-
-
-ALTER SCHEMA public OWNER TO quarkus;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: actor; Type: TABLE; Schema: public; Owner: quarkus
+--
+
+CREATE TABLE public.actor (
+    id uuid NOT NULL,
+    tipo character varying(31) NOT NULL,
+    cpf character varying(255),
+    email character varying(255),
+    name character varying(255),
+    password character varying(255)
+);
+
+
+ALTER TABLE public.actor OWNER TO quarkus;
 
 --
 -- Name: notification; Type: TABLE; Schema: public; Owner: quarkus
@@ -52,8 +59,8 @@ ALTER TABLE public.notification OWNER TO quarkus;
 CREATE TABLE public.transfer (
     value numeric(38,2),
     id bigint NOT NULL,
-    payee bigint NOT NULL,
-    payer bigint NOT NULL
+    payee bigint,
+    payer bigint
 );
 
 
@@ -86,6 +93,14 @@ CREATE TABLE public.wallet (
 ALTER TABLE public.wallet OWNER TO quarkus;
 
 --
+-- Name: actor actor_pkey; Type: CONSTRAINT; Schema: public; Owner: quarkus
+--
+
+ALTER TABLE ONLY public.actor
+    ADD CONSTRAINT actor_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: notification notification_pkey; Type: CONSTRAINT; Schema: public; Owner: quarkus
 --
 
@@ -110,32 +125,6 @@ ALTER TABLE ONLY public.wallet
 
 
 --
--- Name: transfer fk5bs33nh5s0x2l89nnhp7ex1c8; Type: FK CONSTRAINT; Schema: public; Owner: quarkus
---
-
-ALTER TABLE ONLY public.transfer
-    ADD CONSTRAINT fk5bs33nh5s0x2l89nnhp7ex1c8 FOREIGN KEY (payer) REFERENCES public.wallet(ownerid);
-
-
---
--- Name: transfer fkmqcr388oruwt0mgr4euch226q; Type: FK CONSTRAINT; Schema: public; Owner: quarkus
---
-
-ALTER TABLE ONLY public.transfer
-    ADD CONSTRAINT fkmqcr388oruwt0mgr4euch226q FOREIGN KEY (payee) REFERENCES public.wallet(ownerid);
-
-
---
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: quarkus
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-insert INTO public.wallet (balance, ownerid) values (1000,4);
-insert INTO public.wallet (balance, ownerid) values (0,15);
