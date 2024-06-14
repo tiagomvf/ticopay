@@ -6,7 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
 @Dependent
-public class UserStore {
+public class ActorsStore {
 
     @Inject
     EntityManager em;

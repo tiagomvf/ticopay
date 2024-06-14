@@ -1,6 +1,6 @@
 package br.maia.ticopay.transfers.control;
 
-import br.maia.ticopay.actors.control.UserStore;
+import br.maia.ticopay.actors.control.ActorsStore;
 import br.maia.ticopay.actors.entity.Actor;
 import br.maia.ticopay.actors.entity.Merchant;
 import br.maia.ticopay.transfers.entity.Transfer;
@@ -46,7 +46,7 @@ public class TransfersStore {
     Emitter<Transfer> emitter;
 
     @Inject
-    UserStore userStore;
+    ActorsStore userStore;
 
     @Transactional()
     public Transfer postTransfer(long payer, long payee, BigDecimal value) {
