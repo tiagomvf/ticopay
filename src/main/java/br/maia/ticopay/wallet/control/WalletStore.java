@@ -19,20 +19,20 @@ public class WalletStore {
     }
 
     private Wallet getWallet(Long payer) {
-       return
+        return
             Optional.ofNullable(
                 this.findById(payer)
             ).orElseThrow(
-            () -> new WalletNotFoundException(
-                "Wallet with id %d not found".formatted(payer)
-            )
-        );
+                () -> new WalletNotFoundException(
+                    "Wallet with id %d not found".formatted(payer)
+                )
+            );
     }
 
     @Transactional
     public void sacar(Long payee, BigDecimal value) {
         Wallet wallet = getWallet(payee);
-        if(value.compareTo(wallet.getBalance()) > 0){
+        if (value.compareTo(wallet.getBalance()) > 0) {
             throw new InsufficientFundsException();
         }
         wallet.setBalance(wallet.getBalance().subtract(value));
@@ -40,9 +40,14 @@ public class WalletStore {
 
     @Inject
     EntityManager entityManager;
+
     @Transactional
     Wallet findById(long l) {
         return entityManager.find(Wallet.class, l);
+    }
+
+    public BigDecimal getBalance(Long user1Id) {
+        return findById(user1Id).getBalance();
     }
 
 }

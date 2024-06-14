@@ -1,3 +1,4 @@
+
 --
 -- PostgreSQL database dump
 --
@@ -25,7 +26,7 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.actor (
-    id uuid NOT NULL,
+    id bigint NOT NULL,
     tipo character varying(31) NOT NULL,
     cpf character varying(255),
     email character varying(255),
@@ -35,6 +36,20 @@ CREATE TABLE public.actor (
 
 
 ALTER TABLE public.actor OWNER TO quarkus;
+
+--
+-- Name: actor_seq; Type: SEQUENCE; Schema: public; Owner: quarkus
+--
+
+CREATE SEQUENCE public.actor_seq
+    START WITH 1
+    INCREMENT BY 50
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.actor_seq OWNER TO quarkus;
 
 --
 -- Name: notification; Type: TABLE; Schema: public; Owner: quarkus
@@ -125,6 +140,19 @@ ALTER TABLE ONLY public.wallet
 
 
 --
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: quarkus
+--
+
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
+-- insert into public.actor(id, tipo, cpf, email, name, password) VALUES (1,"user", )
+
+
+-- insert INTO public.wallet (balance, ownerid) values (1000,4);
+-- insert INTO public.wallet (balance, ownerid) values (0,15);

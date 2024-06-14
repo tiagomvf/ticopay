@@ -34,7 +34,7 @@ class WalletStoreTest {
     @AfterEach
     @Transactional
     void tearDown() {
-        Query query = em.createQuery("delete Wallet w where w.ownerId in (1L)");
+        Query query = em.createQuery("delete from Wallet");
         query.executeUpdate();
     }
 

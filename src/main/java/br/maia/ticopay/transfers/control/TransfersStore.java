@@ -1,12 +1,15 @@
 package br.maia.ticopay.transfers.control;
 
+import br.maia.ticopay.actors.control.UserStore;
+import br.maia.ticopay.actors.entity.Actor;
+import br.maia.ticopay.actors.entity.Merchant;
 import br.maia.ticopay.transfers.entity.Transfer;
+import br.maia.ticopay.wallet.control.WalletNotFoundException;
 import br.maia.ticopay.wallet.control.WalletStore;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ServerErrorException;
 import jakarta.ws.rs.WebApplicationException;
@@ -21,7 +24,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Dependent
 public class TransfersStore {
@@ -40,8 +45,13 @@ public class TransfersStore {
     @Channel("transfer-created")
     Emitter<Transfer> emitter;
 
-    @Transactional(Transactional.TxType.MANDATORY)
+    @Inject
+    UserStore userStore;
+
+    @Transactional()
     public Transfer postTransfer(long payer, long payee, BigDecimal value) {
+        assertExistenceOf(payer, payee);
+        assertPayerIsNotMerchant(payer);
         Transfer transfer = new Transfer(payer, payee, value);
         validar(transfer);
         repository.persist(transfer);
@@ -51,8 +61,25 @@ public class TransfersStore {
         return transfer;
     }
 
-    @Retry(abortOn = {WebApplicationException.class})
-    void validar(Transfer transfer) {
+    private void assertPayerIsNotMerchant(long payer) {
+        Actor actor = userStore.findById(payer);
+        if(actor instanceof Merchant) {
+            // todo: create correct Exception
+            throw new MerchantCannotSendMoneyException("Merchant cannot send money.");
+        }
+    }
+
+    private void assertExistenceOf(long payer, long payee) {
+        boolean notFound =
+            Stream.of(payer, payee)
+                .map(userStore::findById)
+                .anyMatch(Objects::isNull);
+        if(notFound) {
+            throw new WalletNotFoundException("Wallet with not found.");
+        }
+    }
+
+    Predicate<Transfer> authorizationHandler = (t) -> {
         try (HttpClient client = HttpClient.newHttpClient()) {
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://util.devi.tools/api/v2/authorize"))
@@ -61,31 +88,30 @@ public class TransfersStore {
                 HttpResponse<InputStream> response =
                     client.send(request, HttpResponse.BodyHandlers.ofInputStream());
                 JsonObject jsonObject = Json.createReader(response.body()).readObject();
-                switch (response.statusCode()) {
-                    case 200: {
-                        boolean valid = processValidation(jsonObject);
-                        if(!valid) {
-                            throw new WebApplicationException("Transfer not authorized", 401);
-                        }
-                        break;
-                    }
-                    case 401:
-                    case 403: {
-                        throw new WebApplicationException("Transfer not authorized", response.statusCode());
-                    }
-                    default: throw new ServerErrorException(
+                return switch (response.statusCode()) {
+                    case 200 -> processValidation(jsonObject);
+                    case 401, 403 -> false;
+                    default -> throw new ServerErrorException(
                         "Transfer could not be authorized (http response: %d)".formatted(response.statusCode()), 500
                     );
-                }
+                };
             } catch (IOException e) {
-                throw new TransferAuthenticationException(
+                throw new RuntimeException(
                     "An IOException occurred when validating the transfer.", e
                 );
             } catch (InterruptedException e) {
-                throw new TransferAuthenticationException(
+                throw new RuntimeException(
                     "An InterruptedException occurred when validating the transfer.", e
                 );
             }
+        }
+
+    };
+
+    @Retry(abortOn = {WebApplicationException.class})
+    void validar(Transfer transfer) {
+        if(!authorizationHandler.test(transfer)) {
+            throw new TransferNotAuthorizedException();
         }
     }
 

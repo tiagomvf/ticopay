@@ -6,14 +6,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.br.CPF;
 
-import java.util.UUID;
-
 @Entity
 @DiscriminatorColumn(name = "tipo")
 public abstract class Actor {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    Long id;
     @NotNull
     @NotBlank
     String name;
@@ -26,7 +24,7 @@ public abstract class Actor {
     @NotNull
     String password;
 
-    public UUID getId() {
+    public Long getId() {
         return id;
     }
 
